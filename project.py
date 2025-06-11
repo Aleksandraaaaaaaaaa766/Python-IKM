@@ -96,11 +96,9 @@ class PostfixCalculator:
                 count += 1
                 second = self.stack.pop()
                 first = self.stack.pop()
+
                 if first is None or second is None:
-                    print(
-                        f"Ошибка: недостаточно операндов для {count} операции: {element}."
-                    )
-                    return
+                    raise ValueError(f"Недостаточно операндов для {count} операции '{element}' !")
 
                 if element == "+":
                     self.stack.push(first + second)
@@ -110,15 +108,13 @@ class PostfixCalculator:
                     self.stack.push(first * second)
                 else:
                     if second == 0:
-                        print("На ноль делить нельзя!")
-                        return
+                        raise ValueError("Деление на 0!")
                     self.stack.push(first / second)
 
         rezult = self.stack.pop()
         #  проверка что в стеке ещё остались элементы
         if not self.stack.is_empty():
-            print("Ошибка: лишние операнды. Выражение не корректно.")
-            return
+            raise ValueError("Лишние операнды в стеке!")
         return rezult
 
 
@@ -143,14 +139,16 @@ if __name__ == "__main__":
         expression = user_input.split()
 
         if Validator.verification_of_correctness(expression):
-            rez = PostfixCalculator()
-            r = rez.evaluate(expression)
-            if not r:
-                print("Выражение не корректно.!")
-            else:
-                print(f"Результат вычислений: {r}")
+            calculator = PostfixCalculator()
+            
+            try:
+                result = calculator.evaluate(expression)
+                print(f"Результат: {result}")
+            except ValueError as e:
+                print(f"Ошибка: {e}")
+
         else:
             print(
                 "Введите корректные данные: только положительные числа "
-                "и знаки операций: +, –, *, /."
+                "и знаки операций: +, –, *, / через пробел."
             )
