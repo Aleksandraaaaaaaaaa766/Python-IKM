@@ -1,5 +1,11 @@
+"""
+Вычисление выражения в постфиксной записи
+"""
+
+
 class NodeList:
     """Узел Стека."""
+
     def __init__(self, data=None, next_el=None):
         self.data = data
         self.next_el = next_el
@@ -35,68 +41,92 @@ class Stack:
             return poppednode.data
 
 
-def is_digit(val) -> bool:
-    """Проверка, что в строке число и оно больше 0"""
-    try:
-        return float(val) > 0
-    except ValueError:
-        return False
+class Validator:
+    """Класс первичной проверки на корректность введённых данных"""
 
-
-def verification_of_correctness(e: list) -> bool:
-    """Проверка на корректность вводимых данных"""
-    for i in e:
-        if not (i in {"+", "-", "/", "*"} or is_digit(i)):
+    @staticmethod
+    def is_operand(val: str) -> bool:
+        """Проверка, что в строке число и оно больше 0"""
+        try:
+            return float(val) >= 0
+        except ValueError:
             return False
-    return True
 
+    @staticmethod
+    def is_operator(s: str) -> bool:
+        """Проеряет, что символ является какой либо оперцией"""
+        return s in {"+", "-", "/", "*"}
 
-def evaluate_postfix(expression):
-    """Подсчёт выражения"""
+    @classmethod
+    def verification_of_correctness(cls, expression: list) -> bool:
+        """Проверка на корректность вводимых данных"""
 
-    stack = Stack()
-    count = 0  # счётчик знаков операций
-    for element in expression:
-        if element not in {"+", "-", "/", "*"}:
-            element = float(element)  # преобразов к вещественному
-        # если число, добавляем в стек
-        if isinstance(element, float):
-            stack.push(element)
-        # если знак операции, вычисляем значение
-        else:
-            count += 1
-            second = stack.pop()
-            first = stack.pop()
-            if first is None or second is None:
-                print(
-                    f"Ошибка: недостаточно операндов для {count} операции: {element}."
-                )
-                return None
-            if element == "+":
-                stack.push(first + second)
-            elif element == "-":
-                stack.push(first - second)
-            elif element == "*":
-                stack.push(first * second)
+        # счётчики для подсчёта количества операндов и операций
+        operand_count = 0
+        operator_count = 0
+
+        for elem in expression:
+            if cls.is_operand(elem):
+                operand_count += 1
+            elif cls.is_operator(elem):
+                operator_count += 1
             else:
-                if second == 0:
-                    print("На ноль делить нельзя!")
+                return False
+
+        # В постфиксной записи операторов должно быть на 1 меньше, чем операндов
+        return operand_count == operator_count + 1
+
+
+class PostfixCalculator:
+    """Класс для вычисления постфиксных выражений."""
+
+    def __init__(self):
+        self.stack = Stack()
+
+    def evaluate(self, expression: list):
+        """Подсчёт выражения"""
+
+        count = 0  # счётчик знаков операций
+        for element in expression:
+            # если число, то добавляем в стек
+            if Validator.is_operand(element):
+                self.stack.push(float(element))
+            # если знак операции, вычисляем значение
+            elif Validator.is_operator(element):
+                count += 1
+                second = self.stack.pop()
+                first = self.stack.pop()
+                if first is None or second is None:
+                    print(
+                        f"Ошибка: недостаточно операндов для {count} операции: {element}."
+                    )
                     return
-                stack.push(first / second)
 
-    rezult = stack.pop()
-    #  проверка что в стеке ещё остались элементы
-    if not stack.is_empty():
-        print("Ошибка: лишние операнды. Выражение не корректно.")
-        return
-    return rezult
+                if element == "+":
+                    self.stack.push(first + second)
+                elif element == "-":
+                    self.stack.push(first - second)
+                elif element == "*":
+                    self.stack.push(first * second)
+                else:
+                    if second == 0:
+                        print("На ноль делить нельзя!")
+                        return
+                    self.stack.push(first / second)
+
+        rezult = self.stack.pop()
+        #  проверка что в стеке ещё остались элементы
+        if not self.stack.is_empty():
+            print("Ошибка: лишние операнды. Выражение не корректно.")
+            return
+        return rezult
 
 
-def main():
-    """Обработка  выражения"""
+if __name__ == "__main__":
     while True:
         user_input = input(
-            "\nВведите выражение в одну строчку через пробел, содержащее только положительные числа и знаки операций: +, –, *, /, \n"
+            "\nВведите выражение в одну строчку через пробел, "
+            "содержащее только положительные числа и знаки операций: +, –, *, /, \n"
             "либо 'exit' для выхода: \n"
         )
 
@@ -104,7 +134,7 @@ def main():
             user_input.strip().lower() == "exit"
         ):  # удвляем пробелы и преобразуем к строчным
             break
-        
+
         # если пустой ввод
         if not user_input:
             print("Пустой ввод. Повторите попытку.")
@@ -112,17 +142,15 @@ def main():
 
         expression = user_input.split()
 
-        if verification_of_correctness(expression):
-            rez = evaluate_postfix(expression)
-            if rez is None:
+        if Validator.verification_of_correctness(expression):
+            rez = PostfixCalculator()
+            r = rez.evaluate(expression)
+            if not r:
                 print("Выражение не корректно.!")
             else:
-                print(f"Результат вычислений: {rez}")
+                print(f"Результат вычислений: {r}")
         else:
             print(
-                "Введите корректные данные: только положительные числа и знаки операций: +, –, *, /."
+                "Введите корректные данные: только положительные числа "
+                "и знаки операций: +, –, *, /."
             )
-         
-
-if __name__ == "__main__":
-    main()
