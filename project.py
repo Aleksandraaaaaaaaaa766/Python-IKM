@@ -71,6 +71,7 @@ class Validator:
             elif cls.is_operator(elem):
                 operator_count += 1
             else:
+                print(f"Некорректный элемент {elem}")
                 return False
 
         # В постфиксной записи операторов должно быть на 1 меньше, чем операндов
@@ -79,41 +80,41 @@ class Validator:
 
 class PostfixCalculator:
     """Класс для вычисления постфиксных выражений."""
-
-    def __init__(self):
-        self.stack = Stack()
-
-    def evaluate(self, expression: list):
+    
+    @staticmethod
+    def evaluate(expression: list[str]) -> float:
         """Подсчёт выражения"""
-
+        stack = Stack()
         count = 0  # счётчик знаков операций
         for element in expression:
             # если число, то добавляем в стек
             if Validator.is_operand(element):
-                self.stack.push(float(element))
+                stack.push(float(element))
             # если знак операции, вычисляем значение
             elif Validator.is_operator(element):
                 count += 1
-                second = self.stack.pop()
-                first = self.stack.pop()
+                second = stack.pop()
+                first = stack.pop()
 
                 if first is None or second is None:
                     raise ValueError(f"Недостаточно операндов для {count} операции '{element}' !")
 
                 if element == "+":
-                    self.stack.push(first + second)
+                    stack.push(first + second)
                 elif element == "-":
-                    self.stack.push(first - second)
+                    stack.push(first - second)
                 elif element == "*":
-                    self.stack.push(first * second)
+                    stack.push(first * second)
                 else:
                     if second == 0:
                         raise ValueError("Деление на 0!")
-                    self.stack.push(first / second)
-
-        rezult = self.stack.pop()
+                    stack.push(first / second)
+            else:
+                raise ValueError(f"Некорректный элемент {element}!")
+        
+        rezult = stack.pop()
         #  проверка что в стеке ещё остались элементы
-        if not self.stack.is_empty():
+        if not stack.is_empty():
             raise ValueError("Лишние операнды в стеке!")
         return rezult
 
@@ -139,16 +140,14 @@ if __name__ == "__main__":
         expression = user_input.split()
 
         if Validator.verification_of_correctness(expression):
-            calculator = PostfixCalculator()
-            
             try:
-                result = calculator.evaluate(expression)
+                result = PostfixCalculator().evaluate(expression)
                 print(f"Результат: {result}")
             except ValueError as e:
                 print(f"Ошибка: {e}")
 
         else:
             print(
-                "Введите корректные данные: только положительные числа "
+                "Допустимы только положительные числа "
                 "и знаки операций: +, –, *, / через пробел."
             )
