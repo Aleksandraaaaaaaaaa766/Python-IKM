@@ -26,19 +26,19 @@ class Stack:
         if self.is_empty():
             self.top = NodeList(data)
         else:
-            newnode = NodeList(data)
-            newnode.next_el = self.top
-            self.top = newnode
+            newnode = NodeList(data)  # создаём новый узел
+            newnode.next_el = self.top  # связываем его с текущей вершиной
+            self.top = newnode  # переназначаем вершину
 
     def pop(self):
         """Удалить с вершины"""
         if self.is_empty():
             return None
         else:
-            poppednode = self.top
-            self.top = self.top.next_el
-            poppednode.next_el = None
-            return poppednode.data
+            poppednode = self.top  # сохраняем текущую вершину
+            self.top = self.top.next_el  # переносим указатель к следующему элементу
+            poppednode.next_el = None  # разрываем связь вершины со стеком
+            return poppednode.data  # возвращаем значение удаленной вершины
 
 
 class Validator:
@@ -58,7 +58,7 @@ class Validator:
         return s in {"+", "-", "/", "*"}
 
     @classmethod
-    def verification_of_correctness(cls, expression: list) -> bool:
+    def verification_of_correctness(cls, expression: list[str]) -> bool:
         """Проверка на корректность вводимых данных"""
 
         # счётчики для подсчёта количества операндов и операций
@@ -66,18 +66,20 @@ class Validator:
         operator_count = 0
 
         for elem in expression:
-            if cls.is_operand(elem):
+            if cls.is_operand(elem):  # если число
                 operand_count += 1
-            elif cls.is_operator(elem):
+            elif cls.is_operator(elem):  # если знак операции
                 operator_count += 1
-            else:
+            else:  # если не то и не другое - это некорректный элемент
                 raise ValueError(f"Некорректный элемент {elem}")
 
         # В постфиксной записи операторов должно быть на 1 меньше, чем операндов
         if operand_count == operator_count + 1:
             return True
         else:
-            raise ValueError("Некорректный ввод. Количество чисел должно быть на 1 больше, чем операций!")
+            raise ValueError(
+                "Некорректный ввод. Количество чисел должно быть на 1 больше, чем операций!"
+            )
 
 
 class PostfixCalculator:
@@ -97,7 +99,7 @@ class PostfixCalculator:
                 count += 1
                 second = stack.pop()
                 first = stack.pop()
-
+                # если закончились элементы в стеке
                 if first is None or second is None:
                     raise ValueError(
                         f"Недостаточно операндов для {count} операции '{element}' !"
@@ -116,24 +118,23 @@ class PostfixCalculator:
             else:
                 raise ValueError(f"Некорректный элемент {element}!")
 
-        rezult = stack.pop()
+        result = stack.pop()  # достам элемент после всего прохода
         #  проверка что в стеке ещё остались элементы
         if not stack.is_empty():
             raise ValueError("Лишние операнды в стеке!")
-        return rezult
+        return result
 
 
 if __name__ == "__main__":
+    # программа выполняется до тех пор пока не будет введено exit
     while True:
         user_input = input(
             "\nВведите выражение в одну строчку через пробел, "
             "содержащее только положительные числа и знаки операций: +, –, *, /, \n"
             "либо 'exit' для выхода: \n"
         )
-
-        if (
-            user_input.strip().lower() == "exit"
-        ):  # удвляем пробелы и преобразуем к строчным
+        # удвляем пробелы и преобразуем к строчным
+        if user_input.strip().lower() == "exit":
             break
 
         # если пустой ввод
@@ -141,14 +142,19 @@ if __name__ == "__main__":
             print("Пустой ввод. Повторите попытку.")
             continue
 
+        # разделяем элементы по пробелам
         expression = user_input.split()
+
+        # сначала пытаемся проверить на корректность
         try:
             if Validator.verification_of_correctness(expression):
+                # пытаемся вычислить значение
                 try:
                     result = PostfixCalculator().evaluate(expression)
                     print(f"Результат: {result}")
+                # если вышла ошибка при попытке вычислить
                 except ValueError as e:
-                    print(f"Ошибка: {e}")
-
+                    print(f"Ошибка: {e}")  # вывод названия ошибки
+        # есливышла ошибка при попытке проверить корректность
         except ValueError as e:
             print(f"Ошибка: {e}")
